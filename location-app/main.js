@@ -1,7 +1,7 @@
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 
-constmap = new maplibregl.Map({
+const map = new maplibregl.Map({
   container: 'map', // container id
   zoom: 5,
   center: [138, 37],
