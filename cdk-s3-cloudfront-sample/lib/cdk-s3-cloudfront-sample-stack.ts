@@ -1,5 +1,6 @@
 // lib/cdk-s3-cloudfront-sample-stack.ts
 
+import * as path from 'path';
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 // S3関連のモジュールをインポート
@@ -9,6 +10,9 @@ import { BlockPublicAccess, BucketEncryption } from 'aws-cdk-lib/aws-s3';
 // CloudFront関連のインポート
 import * as cloudfront from 'aws-cdk-lib/aws-cloudfront';
 import * as origins from 'aws-cdk-lib/aws-cloudfront-origins';
+// Lambda関連のインポートを追加
+// import * as ecr from 'aws-cdk-lib/aws-ecr';
+import * as lambda from 'aws-cdk-lib/aws-lambda';
 
 // クラス名がファイル名と一致しているはずです
 export class CdkS3CloudfrontSampleStack extends cdk.Stack {
@@ -60,6 +64,15 @@ export class CdkS3CloudfrontSampleStack extends cdk.Stack {
       },
     });
 
+    // 3. Lambda関数の作成
+    const dockerfileDirectory = path.join(__dirname, '..', 'convert-lambda');
+    const dockerLambda = new lambda.DockerImageFunction(this, 'ConvertLambda', {
+      code: lambda.DockerImageCode.fromImageAsset(dockerfileDirectory),
+      architecture: lambda.Architecture.X86_64,
+      memorySize: 512,
+      timeout: cdk.Duration.seconds(60)
+    })
+
     // --- 出力 (Outputs) ---
 
     // 作成されたS3バケット名
@@ -80,7 +93,11 @@ export class CdkS3CloudfrontSampleStack extends cdk.Stack {
         description: 'ID of the CloudFront distribution',
     });
 
-    // --- ここまで追加 ---
+    // Lambda関数の名前
+    new cdk.CfnOutput(this, 'LambdaFunctionName', {
+      value: dockerLambda.functionName,
+      description: 'Name of the Lambda function created',
+    })
 
   }
 }
