@@ -13,6 +13,8 @@ import * as origins from 'aws-cdk-lib/aws-cloudfront-origins';
 // Lambda関連のインポートを追加
 // import * as ecr from 'aws-cdk-lib/aws-ecr';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
+// S3イベントソースをインポート
+import { S3EventSource } from 'aws-cdk-lib/aws-lambda-event-sources';
 
 // クラス名がファイル名と一致しているはずです
 export class CdkS3CloudfrontSampleStack extends cdk.Stack {
@@ -72,6 +74,15 @@ export class CdkS3CloudfrontSampleStack extends cdk.Stack {
       memorySize: 512,
       timeout: cdk.Duration.seconds(60)
     })
+
+    // 4. Lambda関数にS3バケットへのアクセス権限を付与
+    myBucket.grantReadWrite(dockerLambda);
+
+    // 5. Lambda関数にS3バケットのイベント通知を設定
+    dockerLambda.addEventSource(new S3EventSource(myBucket, {
+      events: [s3.EventType.OBJECT_CREATED],  // オブジェクト作成時にトリガー
+      filters: [{suffix: '.zip'}]  // ZIPファイルのみ
+    }));
 
     // --- 出力 (Outputs) ---
 
