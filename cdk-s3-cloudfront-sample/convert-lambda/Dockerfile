@@ -1,15 +1,13 @@
+# AWS Lambda Python 3.9 Runtime のベースイメージを使用
 FROM public.ecr.aws/lambda/python:3.9
 
-COPY app.py ${LAMBDA_TASK_ROOT}
+# Lambda関数のコードとrequirements.txtをコンテナにコピー
+COPY app.py requirements.txt ${LAMBDA_TASK_ROOT}
+
+# requirements.txt に記載されたPython依存関係をインストール
+RUN pip install --no-cache-dir -r ${LAMBDA_TASK_ROOT}/requirements.txt
 
 CMD [ "app.handler" ]
-
-
-# # AWS Lambda Python 3.9 Runtime のベースイメージを使用
-# FROM public.ecr.aws/lambda/python:3.9
-
-# # 作業ディレクトリを設定
-# WORKDIR /var/task
 
 # # システムパッケージを更新し、GDALとTippecanoeのビルドに必要な依存関係をインストール
 # RUN yum update -y && \
@@ -18,6 +16,9 @@ CMD [ "app.handler" ]
 
 # # GDAL (ogr2ogrを含む) をインストール
 # RUN yum install -y gdal
+
+# # 作業ディレクトリを設定
+# WORKDIR /var/task
 
 # Tippecanoe のビルドに必要なツールとライブラリをインストール
 #     yum install -y make gcc gcc-c++ zlib-devel sqlite-devel curl tar gzip && \
@@ -38,13 +39,7 @@ CMD [ "app.handler" ]
 #     yum clean all && \
 #     rm -rf /var/cache/yum
 
-# # Lambda関数のコード (app.py など) と requirements.txt をコピー
-# # Dockerfileと同じディレクトリに app.py と requirements.txt があると仮定
-# COPY app.py requirements.txt ./
 
-# # requirements.txt に記載されたPython依存関係をインストール
-# # (boto3はLambda環境に含まれますが、他に必要なライブラリがあれば記載)
-# RUN pip install --no-cache-dir -r requirements.txt
 
 # # Lambda関数ハンドラーを指定 (例: app.py ファイルの lambda_handler 関数)
 # # 実際のファイル名と関数名に合わせて変更してください
