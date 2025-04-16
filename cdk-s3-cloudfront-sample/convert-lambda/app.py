@@ -43,7 +43,10 @@ def handler(event, context):
                     f"converted/{file_name.replace('.shp', '.gpkg')}",
                 )
 
-        return f"Processing object: s3://{bucket_name}/{object_key}"
+        return {
+            "statusCode": 200,
+            "body": json.dumps(f"Processing object: s3://{bucket_name}/{object_key}"),
+        }
     except Exception as e:
         print(f"Error processing event: {e}")
         return {
