@@ -113,9 +113,11 @@ def convert_to_pmtiles(input_file, output_file, layer_name="layer"):
     ]
 
     try:
-        subprocess.run(tippecanoe_options, check=True, capture_output=True)
+        subprocess.run(tippecanoe_options, check=True, capture_output=True, text=True)
     except subprocess.CalledProcessError as e:
         print(f"Error converting to PMTiles: {e}")
+        print(f"Standard Output: {e.stdout}")
+        print(f"Standard Error: {e.stderr}")
         raise
     except FileNotFoundError as e:
         print(f"tippecanoe not found: {e}")
