@@ -1,6 +1,7 @@
 import json
 import os
 import zipfile
+from typing import Literal
 
 import boto3
 import fiona
@@ -31,16 +32,31 @@ def handler(event, context):
         for file_name in os.listdir(tmp_dir):
             if file_name.endswith(".shp"):
                 # GeoPackageに変換
-                convert_to_geopackage(
+                convert_data_type(
                     os.path.join(tmp_dir, file_name),
                     os.path.join(tmp_dir, file_name.replace(".shp", ".gpkg")),
+                    "GPKG",
                 )
 
                 # GeoPackageをS3にアップロード
                 s3_client.upload_file(
                     os.path.join(tmp_dir, file_name.replace(".shp", ".gpkg")),
                     bucket_name,
-                    f"converted/{file_name.replace('.shp', '.gpkg')}",
+                    f"streaming_data/gpkg/{file_name.replace('.shp', '.gpkg')}",
+                )
+
+                # GeoJSONに変換
+                convert_data_type(
+                    os.path.join(tmp_dir, file_name),
+                    os.path.join(tmp_dir, file_name.replace(".shp", ".geojson")),
+                    "GeoJSON",
+                )
+
+                # GeoJSONをS3にアップロード
+                s3_client.upload_file(
+                    os.path.join(tmp_dir, file_name.replace(".shp", ".geojson")),
+                    bucket_name,
+                    f"streaming_data/geojson/{file_name.replace('.shp', '.geojson')}",
                 )
 
         return f"Processing object: s3://{bucket_name}/{object_key}"
@@ -52,13 +68,13 @@ def handler(event, context):
         }
 
 
-def convert_to_geopackage(input_file, output_file):
+def convert_data_type(input_file, output_file, driver: Literal["GeoJSON", "GPKG"]):
     """
-    Convert a shapefile to GeoPackage format.
+    Convert a shapefile to GeoJSON or GeoPackage format.
     """
     with fiona.open(input_file, "r") as src:
         profile = src.profile
-        profile.update(driver="GPKG", crs=src.crs)
+        profile.update(driver=driver, crs=src.crs)
         with fiona.open(output_file, "w", **profile) as dst:
             for feature in src:
                 dst.write(feature)
@@ -74,4 +90,7 @@ if __name__ == "__main__":
     # gpkg
     gpkg_file = os.path.join(dir_path, "test_data", "N03-20240101_14.gpkg")
 
-    convert_to_geopackage(shp_file, gpkg_file)
+    # geojson
+    geojson_file = os.path.join(dir_path, "test_data", "N03-20240101_14.geojson")
+
+    convert_data_type(shp_file, geojson_file, "GeoJSON")
