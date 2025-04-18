@@ -1,6 +1,8 @@
 import json
 import os
+import subprocess
 import zipfile
+from typing import Literal
 
 import boto3
 import fiona
@@ -31,16 +33,45 @@ def handler(event, context):
         for file_name in os.listdir(tmp_dir):
             if file_name.endswith(".shp"):
                 # GeoPackageに変換
-                convert_to_geopackage(
+                convert_data_type(
                     os.path.join(tmp_dir, file_name),
                     os.path.join(tmp_dir, file_name.replace(".shp", ".gpkg")),
+                    "GPKG",
                 )
 
                 # GeoPackageをS3にアップロード
                 s3_client.upload_file(
                     os.path.join(tmp_dir, file_name.replace(".shp", ".gpkg")),
                     bucket_name,
-                    f"converted/{file_name.replace('.shp', '.gpkg')}",
+                    f"streaming_data/gpkg/{file_name.replace('.shp', '.gpkg')}",
+                )
+
+                # GeoJSONに変換
+                convert_data_type(
+                    os.path.join(tmp_dir, file_name),
+                    os.path.join(tmp_dir, file_name.replace(".shp", ".geojson")),
+                    "GeoJSON",
+                )
+
+                # GeoJSONをS3にアップロード
+                s3_client.upload_file(
+                    os.path.join(tmp_dir, file_name.replace(".shp", ".geojson")),
+                    bucket_name,
+                    f"streaming_data/geojson/{file_name.replace('.shp', '.geojson')}",
+                )
+
+                # tippecanoeを使用してPMTilesに変換
+                convert_to_pmtiles(
+                    os.path.join(tmp_dir, file_name.replace(".shp", ".geojson")),
+                    os.path.join(tmp_dir, file_name.replace(".shp", ".pmtiles")),
+                    layer_name=file_name.replace(".shp", ""),
+                )
+
+                # PMTilesをS3にアップロード
+                s3_client.upload_file(
+                    os.path.join(tmp_dir, file_name.replace(".shp", ".pmtiles")),
+                    bucket_name,
+                    f"streaming_data/pmtiles/{file_name.replace('.shp', '.pmtiles')}",
                 )
 
         return {
@@ -55,16 +86,45 @@ def handler(event, context):
         }
 
 
-def convert_to_geopackage(input_file, output_file):
+def convert_data_type(input_file, output_file, driver: Literal["GeoJSON", "GPKG"]):
     """
-    Convert a shapefile to GeoPackage format.
+    Convert a shapefile to GeoJSON or GeoPackage format.
     """
     with fiona.open(input_file, "r") as src:
         profile = src.profile
-        profile.update(driver="GPKG", crs=src.crs)
+        profile.update(driver=driver, crs=src.crs)
         with fiona.open(output_file, "w", **profile) as dst:
             for feature in src:
                 dst.write(feature)
+
+
+def convert_to_pmtiles(input_file, output_file, layer_name="layer"):
+    """
+    Convert a GeoJSON file to PMTiles format using tippecanoe.
+    """
+    tippecanoe_options = [
+        "tippecanoe",
+        "-o",
+        output_file,
+        "--force",
+        "-Z5",
+        "-z14",
+        "-l",
+        layer_name,
+        "--no-tile-compression",
+        input_file,
+    ]
+
+    try:
+        subprocess.run(tippecanoe_options, check=True, capture_output=True, text=True)
+    except subprocess.CalledProcessError as e:
+        print(f"Error converting to PMTiles: {e}")
+        print(f"Standard Output: {e.stdout}")
+        print(f"Standard Error: {e.stderr}")
+        raise
+    except FileNotFoundError as e:
+        print(f"tippecanoe not found: {e}")
+        raise
 
 
 if __name__ == "__main__":
@@ -77,4 +137,7 @@ if __name__ == "__main__":
     # gpkg
     gpkg_file = os.path.join(dir_path, "test_data", "N03-20240101_14.gpkg")
 
-    convert_to_geopackage(shp_file, gpkg_file)
+    # geojson
+    geojson_file = os.path.join(dir_path, "test_data", "N03-20240101_14.geojson")
+
+    convert_data_type(shp_file, geojson_file, "GeoJSON")
