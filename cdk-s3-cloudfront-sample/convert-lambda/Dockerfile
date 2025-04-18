@@ -1,5 +1,27 @@
-# AWS Lambda Python 3.9 Runtime のベースイメージを使用
-FROM public.ecr.aws/lambda/python:3.9
+# AWS Lambda Python 3.11 Runtime のベースイメージを使用
+FROM public.ecr.aws/lambda/python:3.11
+
+# Tippecanoe のバージョンを指定
+ARG TIPPECANOE_VERSION_ARG=2.51.0
+ENV TIPPECANOE_VERSION=${TIPPECANOE_VERSION_ARG}
+
+RUN yum update -y && \
+    yum install -y git make automake gcc gcc-c++ libtool sqlite-devel zlib-devel && \
+    yum clean all && \
+    rm -rf /var/cache/yum
+
+# tippecanoeのインストール
+RUN set -eux; \
+    git clone https://github.com/felt/tippecanoe.git /tmp/tippecanoe && \
+    cd /tmp/tippecanoe && \
+    git checkout ${TIPPECANOE_VERSION} && \
+    make -j $(nproc) && \
+    make install && \
+    cd / && \
+    rm -rf /tmp/tippecanoe
+
+# tippecanoeのバージョンを確認
+RUN tippecanoe --version
 
 # Lambda関数のコードとrequirements.txtをコンテナにコピー
 COPY app.py requirements.txt ${LAMBDA_TASK_ROOT}
