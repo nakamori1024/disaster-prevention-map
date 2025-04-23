@@ -1,7 +1,14 @@
 import maplibregl from 'maplibre-gl';
-import 'maplibre-gl/dist/maplibre-gl.css';
-import OpacityControl from 'maplibre-gl-opacity'
+import OpacityControl from 'maplibre-gl-opacity';
 import 'maplibre-gl-opacity/dist/maplibre-gl-opacity.css';
+import 'maplibre-gl/dist/maplibre-gl.css';
+import { Protocol } from 'pmtiles';
+
+// PMTilesプロトコルを初期化
+const protocol = new Protocol();
+// MapLibre GL JSに 'pmtiles' というカスタムプロトコルを追加
+maplibregl.addProtocol('pmtiles', protocol.tile);
+
 
 const map = new maplibregl.Map({
   container: 'map',
@@ -160,6 +167,33 @@ const map = new maplibregl.Map({
 });
 
 map.on('load', () => {
+  // const tilesUrl = 'https://d1z62ehlrono0i.cloudfront.net/streaming_data/pmtiles/tokyo_hinan.pmtiles';
+  const tilesUrl = 'tokyo_hinan.pmtiles';  // ローカルのPMTilesファイルを指定
+
+  map.addSource('pmtiles', {
+    type: 'vector',
+    url: 'pmtiles://' + tilesUrl,
+    attribution: 'test-data'
+  });
+  map.addLayer({
+    id: 'pmtiles-layer',
+    type: 'circle',
+    source: 'pmtiles',
+    'source-layer': 'tokyo_hinan', // ここに適切なレイヤー名を指定
+    paint: {
+      'circle-color': '#6666cc',
+      'circle-radius': [
+        'interpolate',
+        ['linear'],
+        ['zoom'],
+        5, 2,
+        14, 6,
+      ],
+      'circle-stroke-width': 1,
+      'circle-stroke-color': '#ffffff'
+    }
+  });
+
   const opacityControl = new OpacityControl({
     baseLayers: {
       'hazard_flood-layer': '洪水浸水想定区域',

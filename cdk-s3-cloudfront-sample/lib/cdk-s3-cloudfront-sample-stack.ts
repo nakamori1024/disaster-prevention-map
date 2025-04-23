@@ -1,8 +1,8 @@
 // lib/cdk-s3-cloudfront-sample-stack.ts
 
-import * as path from 'path';
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
+import * as path from 'path';
 // S3関連のモジュールをインポート
 import * as s3 from 'aws-cdk-lib/aws-s3';
 // BlockPublicAccess クラスもインポート
@@ -42,6 +42,16 @@ export class CdkS3CloudfrontSampleStack extends cdk.Stack {
 
       // 暗号化を有効にする
       encryption: BucketEncryption.S3_MANAGED,
+
+      // CORS設定 (CloudFrontからのアクセスを許可)
+      cors: [
+        {
+          allowedMethods: [s3.HttpMethods.GET, s3.HttpMethods.HEAD],
+          allowedOrigins: ['*'],  // 全てのオリジンを許可
+          allowedHeaders: ['*'],  // 全てのヘッダーを許可
+          exposedHeaders: ['Content-Range', 'ETag', 'Accept-Ranges'],
+        }
+      ]
     });
 
     // --- ここから追加 ---
@@ -72,7 +82,7 @@ export class CdkS3CloudfrontSampleStack extends cdk.Stack {
       code: lambda.DockerImageCode.fromImageAsset(dockerfileDirectory),
       architecture: lambda.Architecture.X86_64,
       memorySize: 512,
-      timeout: cdk.Duration.seconds(60)
+      timeout: cdk.Duration.seconds(180)
     })
 
     // 4. Lambda関数にS3バケットへのアクセス権限を付与
@@ -81,7 +91,7 @@ export class CdkS3CloudfrontSampleStack extends cdk.Stack {
     // 5. Lambda関数にS3バケットのイベント通知を設定
     dockerLambda.addEventSource(new S3EventSource(myBucket, {
       events: [s3.EventType.OBJECT_CREATED],  // オブジェクト作成時にトリガー
-      filters: [{suffix: '.zip'}]  // ZIPファイルのみ
+      filters: [{ suffix: '.zip' }]  // ZIPファイルのみ
     }));
 
     // --- 出力 (Outputs) ---
@@ -100,8 +110,8 @@ export class CdkS3CloudfrontSampleStack extends cdk.Stack {
 
     // CloudFront ディストリビューションのID
     new cdk.CfnOutput(this, 'DistributionId', {
-        value: myDistribution.distributionId,
-        description: 'ID of the CloudFront distribution',
+      value: myDistribution.distributionId,
+      description: 'ID of the CloudFront distribution',
     });
 
     // Lambda関数の名前
