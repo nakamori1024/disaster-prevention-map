@@ -82,7 +82,7 @@ export class CdkS3CloudfrontSampleStack extends cdk.Stack {
       code: lambda.DockerImageCode.fromImageAsset(dockerfileDirectory),
       architecture: lambda.Architecture.X86_64,
       memorySize: 512,
-      timeout: cdk.Duration.seconds(60)
+      timeout: cdk.Duration.seconds(180)
     })
 
     // 4. Lambda関数にS3バケットへのアクセス権限を付与
