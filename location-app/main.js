@@ -1,4 +1,5 @@
 import maplibregl from 'maplibre-gl';
+import OpacityControl from 'maplibre-gl-opacity';
 import 'maplibre-gl-opacity/dist/maplibre-gl-opacity.css';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { Protocol } from 'pmtiles';
@@ -168,18 +169,25 @@ const map = new maplibregl.Map({
 map.on('load', () => {
   map.addSource('pmtiles', {
     type: 'vector',
-    url: 'pmtiles://https://d3qzzdmbu7v2w5.cloudfront.net/streaming_data/pmtiles/N03-20240101_14.pmtiles',
+    url: 'pmtiles://https://d1z62ehlrono0i.cloudfront.net/streaming_data/pmtiles/tokyo_hinan.pmtiles',
     attribution: 'test-data'
   });
   map.addLayer({
     id: 'pmtiles-layer',
-    type: 'fill',
+    type: 'circle',
     source: 'pmtiles',
-    'source-layer': 'N03-20240101_14', // ここに適切なレイヤー名を指定
+    'source-layer': 'tokyo_hinan', // ここに適切なレイヤー名を指定
     paint: {
-      "fill-color": "#00ffff",
-      "fill-opacity": 0.4,
-      "fill-outline-color": "#ff0000",
+      'circle-color': '#6666cc',
+      'circle-radius': [
+        'interpolate',
+        ['linear'],
+        ['zoom'],
+        5, 2,
+        14, 6,
+      ],
+      'circle-stroke-width': 1,
+      'circle-stroke-color': '#ffffff'
     }
   });
 
