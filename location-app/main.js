@@ -167,9 +167,12 @@ const map = new maplibregl.Map({
 });
 
 map.on('load', () => {
+  // const tilesUrl = 'https://d1z62ehlrono0i.cloudfront.net/streaming_data/pmtiles/tokyo_hinan.pmtiles';
+  const tilesUrl = 'tokyo_hinan.pmtiles';  // ローカルのPMTilesファイルを指定
+
   map.addSource('pmtiles', {
     type: 'vector',
-    url: 'pmtiles://https://d1z62ehlrono0i.cloudfront.net/streaming_data/pmtiles/tokyo_hinan.pmtiles',
+    url: 'pmtiles://' + tilesUrl,
     attribution: 'test-data'
   });
   map.addLayer({
