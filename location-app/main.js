@@ -1,7 +1,13 @@
 import maplibregl from 'maplibre-gl';
-import 'maplibre-gl/dist/maplibre-gl.css';
-import OpacityControl from 'maplibre-gl-opacity'
 import 'maplibre-gl-opacity/dist/maplibre-gl-opacity.css';
+import 'maplibre-gl/dist/maplibre-gl.css';
+import { Protocol } from 'pmtiles';
+
+// PMTilesプロトコルを初期化
+const protocol = new Protocol();
+// MapLibre GL JSに 'pmtiles' というカスタムプロトコルを追加
+maplibregl.addProtocol('pmtiles', protocol.tile);
+
 
 const map = new maplibregl.Map({
   container: 'map',
@@ -160,6 +166,23 @@ const map = new maplibregl.Map({
 });
 
 map.on('load', () => {
+  map.addSource('pmtiles', {
+    type: 'vector',
+    url: 'pmtiles://https://d3qzzdmbu7v2w5.cloudfront.net/streaming_data/pmtiles/N03-20240101_14.pmtiles',
+    attribution: 'test-data'
+  });
+  map.addLayer({
+    id: 'pmtiles-layer',
+    type: 'fill',
+    source: 'pmtiles',
+    'source-layer': 'N03-20240101_14', // ここに適切なレイヤー名を指定
+    paint: {
+      "fill-color": "#00ffff",
+      "fill-opacity": 0.4,
+      "fill-outline-color": "#ff0000",
+    }
+  });
+
   const opacityControl = new OpacityControl({
     baseLayers: {
       'hazard_flood-layer': '洪水浸水想定区域',
