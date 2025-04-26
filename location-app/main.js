@@ -313,4 +313,9 @@ map.on('load', () => {
       `)
       .addTo(map);
   })
+
+  const geolocationControl = new maplibregl.GeolocateControl({
+    trackUserLocation: true,
+  });
+  map.addControl(geolocationControl, 'bottom-right');
 });
