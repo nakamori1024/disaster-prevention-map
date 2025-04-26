@@ -305,7 +305,7 @@ map.on('load', () => {
       .setLngLat(e.lngLat)
       .setHTML(`
         <h3>${feature.properties['NAME']}</h3>
-        <p>Adress: ${feature.properties['ADDRESS']}</p>
+        <p>Address: ${feature.properties['ADDRESS']}</p>
         <p>Flood: ${feature.properties['FLOOD']}</p>
         <p>High Tide: ${feature.properties['HIGHTIDE']}</p>
         <p>Tsunami: ${feature.properties['TSUNAMI']}</p>
