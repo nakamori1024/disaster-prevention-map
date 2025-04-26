@@ -273,4 +273,30 @@ map.on('load', () => {
     }
   });
   map.addControl(opacityControl, 'top-left');
+
+
+
+  map.on('click', (e) => {
+    const features = map.queryRenderedFeatures(e.point, {
+      layers: [
+        'skhb-1-layer',
+        'skhb-2-layer',
+        'skhb-3-layer',
+        'skhb-4-layer'
+      ]
+    })
+    if (features.length === 0) return;
+    const feature = features[0];
+    const popup = new maplibregl.Popup()
+      .setLngLat(e.lngLat)
+      .setHTML(`
+        <h3>${feature.properties['NAME']}</h3>
+        <p>Adress: ${feature.properties['ADDRESS']}</p>
+        <p>Flood: ${feature.properties['FLOOD']}</p>
+        <p>High Tide: ${feature.properties['HIGHTIDE']}</p>
+        <p>Tsunami: ${feature.properties['TSUNAMI']}</p>
+        <p>Earthquake: ${feature.properties['EARTHQUAKE']}</p>
+      `)
+      .addTo(map);
+  })
 });
