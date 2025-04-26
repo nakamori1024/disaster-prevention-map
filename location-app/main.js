@@ -176,10 +176,10 @@ map.on('load', () => {
     attribution: 'test-data'
   });
   map.addLayer({
-    id: 'pmtiles-layer',
+    id: 'skhb-1-layer',
     type: 'circle',
     source: 'pmtiles',
-    'source-layer': 'tokyo_hinan', // ここに適切なレイヤー名を指定
+    'source-layer': 'tokyo_hinan',
     paint: {
       'circle-color': '#6666cc',
       'circle-radius': [
@@ -191,8 +191,76 @@ map.on('load', () => {
       ],
       'circle-stroke-width': 1,
       'circle-stroke-color': '#ffffff'
+    },
+    filter: ['==', ['get', 'FLOOD'], 1]
+  });
+  map.addLayer({
+    id: 'skhb-2-layer',
+    type: 'circle',
+    source: 'pmtiles',
+    'source-layer': 'tokyo_hinan',
+    paint: {
+      'circle-color': '#6666cc',
+      'circle-radius': [
+        'interpolate',
+        ['linear'],
+        ['zoom'],
+        5, 2,
+        14, 6,
+      ],
+      'circle-stroke-width': 1,
+      'circle-stroke-color': '#ffffff'
+    },
+    filter: ['==', ['get', 'HIGHTIDE'], 1]
+  });
+  map.addLayer({
+    id: 'skhb-3-layer',
+    type: 'circle',
+    source: 'pmtiles',
+    'source-layer': 'tokyo_hinan',
+    paint: {
+      'circle-color': '#6666cc',
+      'circle-radius': [
+        'interpolate',
+        ['linear'],
+        ['zoom'],
+        5, 2,
+        14, 6,
+      ],
+      'circle-stroke-width': 1,
+      'circle-stroke-color': '#ffffff'
+    },
+    filter: ['==', ['get', 'TSUNAMI'], 1]
+  });
+  map.addLayer({
+    id: 'skhb-4-layer',
+    type: 'circle',
+    source: 'pmtiles',
+    'source-layer': 'tokyo_hinan',
+    paint: {
+      'circle-color': '#6666cc',
+      'circle-radius': [
+        'interpolate',
+        ['linear'],
+        ['zoom'],
+        5, 2,
+        14, 6,
+      ],
+      'circle-stroke-width': 1,
+      'circle-stroke-color': '#ffffff'
+    },
+    filter: ['==', ['get', 'EARTHQUAKE'], 1]
+  });
+
+  const opacitySkhb = new OpacityControl({
+    baseLayers: {
+      'skhb-1-layer': '洪水',
+      'skhb-2-layer': '高潮',
+      'skhb-3-layer': '津波',
+      'skhb-4-layer': '地震'
     }
   });
+  map.addControl(opacitySkhb, 'top-right');
 
   const opacityControl = new OpacityControl({
     baseLayers: {
