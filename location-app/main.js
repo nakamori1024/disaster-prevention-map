@@ -1,3 +1,4 @@
+import distance from '@turf/distance';
 import maplibregl from 'maplibre-gl';
 import OpacityControl from 'maplibre-gl-opacity';
 import 'maplibre-gl-opacity/dist/maplibre-gl-opacity.css';
@@ -88,6 +89,13 @@ const map = new maplibregl.Map({
         maxzoom: 17,
         tileSize: 256,
         attribution: '<a href="https://disaportal.gsi.go.jp/hazardmap/copyright/opendata.html">ハザードマップポータルサイト</a>'
+      },
+      route: {
+        type: 'geojson',
+        data: {
+          type: 'FeatureCollection',
+          features: [],
+        },
       }
     },
     layers: [
@@ -161,10 +169,56 @@ const map = new maplibregl.Map({
         layout: {
           visibility: 'none'
         }
+      },
+      {
+        id: 'route-layer',
+        source: 'route',
+        type: 'line',
+        paint: {
+          'line-color': '#33aaff',
+          'line-width': 4
+        }
       }
     ]
   }
 });
+
+const getCurrentSkhbLayerFilter = () => {
+  const style = map.getStyle();
+  const skhbLayers = style.layers.filter((layer) =>
+    layer.id.startsWith('skhb'),
+  );
+  const visibleSkhbLayers = skhbLayers.filter(
+    (layer) => layer.layout.visibility === 'visible',
+  );
+  return visibleSkhbLayers[0].filter;
+};
+
+const getNearestFeature = (longitude, latitude) => {
+  const currentSkhbLayerFilter = getCurrentSkhbLayerFilter();
+  const features = map.querySourceFeatures('pmtiles', {
+    sourceLayer: 'tokyo_hinan',
+    filter: currentSkhbLayerFilter
+  });
+
+  const nearestFeature = features.reduce((minDistFeature, feature) => {
+    const dist = distance(
+      [longitude, latitude],
+      feature.geometry.coordinates
+    );
+
+    if (minDistFeature === null || minDistFeature.properties.dist > dist)
+      return {
+        ...feature,
+        properties: {
+          ...feature.properties,
+          dist,
+        }
+      };
+    return minDistFeature;
+  }, null);
+  return nearestFeature;
+};
 
 map.on('load', () => {
   // const tilesUrl = 'https://d1z62ehlrono0i.cloudfront.net/streaming_data/pmtiles/tokyo_hinan.pmtiles';
@@ -314,8 +368,45 @@ map.on('load', () => {
       .addTo(map);
   })
 
+  let userLocation = null;
+
   const geolocationControl = new maplibregl.GeolocateControl({
     trackUserLocation: true,
   });
   map.addControl(geolocationControl, 'bottom-right');
+  geolocationControl.on('geolocate', (e) => {
+    userLocation = [e.coords.longitude, e.coords.latitude];
+  });
+
+
+  map.on('render', () => {
+    if (geolocationControl._watchState === 'OFF') userLocation = null;
+
+    // ライン形状をリセット
+    if (map.getZoom() < 7 || userLocation === null) {
+      map.getSource('route').setData({
+        type: 'FeatureCollection',
+        features: []
+      });
+      return;
+    }
+
+    const nearestFeature = getNearestFeature(userLocation[0], userLocation[1]);
+
+    // 直線ライン
+    const routeFeature = {
+      type: 'Feature',
+      geometry: {
+        type: 'LineString',
+        coordinates: [
+          userLocation,
+          nearestFeature._geometry.coordinates
+        ]
+      }
+    };
+    map.getSource('route').setData({
+      type: 'FeatureCollection',
+      features: [routeFeature]
+    });
+  });
 });
