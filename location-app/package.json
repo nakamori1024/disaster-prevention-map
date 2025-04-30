@@ -14,6 +14,7 @@
   "dependencies": {
     "@turf/distance": "^7.2.0",
     "maplibre-gl": "^2.4.0",
+    "maplibre-gl-gsi-terrain": "^0.0.2",
     "maplibre-gl-opacity": "^1.4.0",
     "pmtiles": "^4.3.0"
   }
