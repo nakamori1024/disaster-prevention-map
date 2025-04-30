@@ -222,8 +222,8 @@ const getNearestFeature = (longitude, latitude) => {
 };
 
 map.on('load', () => {
-  // const tilesUrl = 'https://d1z62ehlrono0i.cloudfront.net/streaming_data/pmtiles/tokyo_hinan.pmtiles';
-  const tilesUrl = 'tokyo_hinan.pmtiles';  // ローカルのPMTilesファイルを指定
+  const tilesUrl = 'https://d1z62ehlrono0i.cloudfront.net/streaming_data/pmtiles/tokyo_hinan.pmtiles';
+  // const tilesUrl = 'tokyo_hinan.pmtiles';  // ローカルのPMTilesファイルを指定
 
   map.addSource('pmtiles', {
     type: 'vector',
