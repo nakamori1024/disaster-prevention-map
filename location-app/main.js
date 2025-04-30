@@ -422,4 +422,10 @@ map.on('load', () => {
       'hillshade-exaggeration': 0.2
     }
   }, 'hazard_jisuberi-layer');
+  map.addControl(
+    new maplibregl.TerrainControl({
+      source: 'gsi-terrain',
+      exaggeration: 1
+    })
+  )
 });
