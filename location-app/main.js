@@ -1,5 +1,6 @@
 import distance from '@turf/distance';
 import maplibregl from 'maplibre-gl';
+import { useGsiTerrainSource } from 'maplibre-gl-gsi-terrain';
 import OpacityControl from 'maplibre-gl-opacity';
 import 'maplibre-gl-opacity/dist/maplibre-gl-opacity.css';
 import 'maplibre-gl/dist/maplibre-gl.css';
@@ -409,4 +410,22 @@ map.on('load', () => {
       features: [routeFeature]
     });
   });
+
+  const gsiTerrainSource = useGsiTerrainSource(maplibregl.addProtocol);
+  map.addSource('gsi-terrain', gsiTerrainSource);
+  map.addLayer({
+    id: 'hillshade',
+    type: 'hillshade',
+    source: 'gsi-terrain',
+    paint: {
+      'hillshade-illumination-anchor': 'map',
+      'hillshade-exaggeration': 0.2
+    }
+  }, 'hazard_jisuberi-layer');
+  map.addControl(
+    new maplibregl.TerrainControl({
+      source: 'gsi-terrain',
+      exaggeration: 1
+    })
+  )
 });
